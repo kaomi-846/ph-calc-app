@@ -1,287 +1,411 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<title>加熱殺菌判定アプリ</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="UTF-8" />
+    <title>加熱殺菌判定アプリ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<style>
-body {font-family:sans-serif;padding:15px;max-width:500px;margin:auto;}
-input,select,button{width:100%;padding:12px;margin-bottom:10px;font-size:16px;}
-button{border:none;color:white;}
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 15px;
+        max-width: 500px;
+        margin: auto;
+      }
+      input,
+      select,
+      button {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 10px;
+        font-size: 16px;
+      }
+      button {
+        border: none;
+        color: white;
+      }
 
-.green{background:#28a745;}
-.blue{background:#007bff;}
-.soft-red{background:#fa664c;}
-.subtle{background:#fffcfc;color:#ff1414;border:1px solid #ff1414;}
+      .green {
+        background: #28a745;
+      }
+      .blue {
+        background: #007bff;
+      }
+      .soft-red {
+        background: #fa664c;
+      }
+      .subtle {
+        background: #fff6f6;
+        color: #ff1414;
+        border: 1px solid #ff1414;
+      }
 
-.result{padding:20px;border-radius:12px;text-align:center;}
-.ok{background:#d4edda;}
-.ng{background:#f8d7da;}
-.warning{background:#e2d4f0;}
-.neutral{background:#fdffa4;} /* ← クリーム色 */
+      .result {
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+      }
+      .ok {
+        background: #d4edda;
+      }
+      .ng {
+        background: #f8d7da;
+      }
+      .warning {
+        background: #e9e8ff;
+      }
+      .neutral {
+        background: #fffeb5;
+      } /* ← クリーム色 */
 
-table{width:100%;border-collapse:collapse;font-size:12px;}
-td,th{border:1px solid #ccc;padding:5px;}
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      td,
+      th {
+        border: 1px solid #ccc;
+        padding: 5px;
+      }
 
-.zone1{background:#b6f2c6;}
-.zone2{background:#fdffa4;
-.zone3{background:#e2b6f2;}
+      .zone1 {
+        background: #b6f2c6;
+      }
+      .zone2 {
+        background: #feffb0;
+      }
+      .zone3 {
+        background: #ffdbec;
+      }
 
-.note{font-size:11px;color:#555;margin-top:20px;}
-</style>
-</head>
+      .note {
+        font-size: 11px;
+        color: #555;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
 
-<body>
+  <body>
+    <h2>加熱殺菌 判定</h2>
+    <details style="margin-bottom: 10px">
+      <summary style="cursor: pointer; font-weight: bold; font-size: 14px">
+        ▶ 使い方（タップで開く）
+      </summary>
 
-<h2>加熱殺菌 判定</h2>
+      <div
+        style="
+          background: #f8f9fa;
+          padding: 10px;
+          border-radius: 10px;
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.6;
+        "
+      >
+        ① pHと加熱温度を入力<br />
+        ② 必要に応じて実際の加熱時間を入力<br />
+        ③ 「基準に達しているか判定」を押す<br />
+        ④ 推奨時間と判定結果を確認<br />
+        ※現場目安は推奨時間よりも長めに設定しています<br />
+        ※温度は中心温度で入力してください<br />
+        ※記録ボタンで履歴を保存できます
+      </div>
+    </details>
 
-<select id="product">
-<option>ピクルス</option>
-<option>ジャム</option>
-<option>シロップ</option>
-<option>たれ・ソース</option>
-<option>その他</option>
-</select>
+    <select id="product">
+      <option>ピクルス</option>
+      <option>ジャム</option>
+      <option>シロップ</option>
+      <option>たれ・ソース</option>
+      <option>その他</option>
+    </select>
 
-<input id="noteInput" placeholder="備考（ロット番号など）">
+    <input id="noteInput" placeholder="備考（ロット番号など）" />
 
-<input id="ph" placeholder="pH" value="3.5">
-<input id="temp" placeholder="加熱温度（℃）" value="80">
-<input id="actualTime" placeholder="実際時間（分）※任意">
-<input id="aw" placeholder="Aw（任意）">
+    <input id="ph" placeholder="pH" value="3.5" />
+    <input id="temp" placeholder="加熱温度（℃）" value="80" />
+    <input id="actualTime" placeholder="実際時間（分）※任意" />
+    <input id="aw" placeholder="Aw（任意）" />
 
-<button class="green" onclick="calculate()">基準に達しているか判定</button>
+    <button class="green" onclick="calculate()">基準に達しているか判定</button>
 
-<input id="targetTime" placeholder="逆算：目標時間（分）">
-<button class="green" onclick="reverseCalc()">必要温度逆算</button>
+    <input id="targetTime" placeholder="逆算：目標時間（分）" />
+    <button class="green" onclick="reverseCalc()">必要温度逆算</button>
 
-<div id="result" class="result neutral">ここに結果</div>
+    <div id="result" class="result neutral">ここに結果</div>
 
-<h3>pH区分</h3>
-<table>
-<tr><th>区分</th><th>条件</th></tr>
-<tr id="z1"><td>①</td><td>pH < 4.0</td></tr>
-<tr id="z2"><td>②</td><td>4.0 ～ 4.6</td></tr>
-<tr id="z3"><td>③</td><td>pH ≥ 4.6 かつ Aw > 0.94</td></tr>
-</table>
+    <h3>pH区分</h3>
+    <table>
+      <tr>
+        <th>区分</th>
+        <th>条件</th>
+      </tr>
+      <tr id="z1">
+        <td>①</td>
+        <td>pH < 4.0</td>
+      </tr>
+      <tr id="z2">
+        <td>②</td>
+        <td>4.0 ～ 4.6</td>
+      </tr>
+      <tr id="z3">
+        <td>③</td>
+        <td>pH ≥ 4.6 かつ Aw > 0.94</td>
+      </tr>
+    </table>
 
-<button class="green" onclick="saveRecord()">記録する</button>
-<button class="blue" onclick="downloadCSV()">CSVダウンロード</button>
+    <button class="green" onclick="saveRecord()">記録する</button>
+    <button class="blue" onclick="downloadCSV()">CSVダウンロード</button>
 
-<h3>記録</h3>
+    <h3>記録</h3>
 
-<table>
-<thead>
-<tr>
-<th></th><th>日時</th><th>品目</th><th>備考</th>
-<th>pH</th><th>温度</th><th>時間</th><th>判定</th>
-</tr>
-</thead>
-<tbody id="log"></tbody>
-</table>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>日時</th>
+          <th>品目</th>
+          <th>備考</th>
+          <th>pH</th>
+          <th>温度</th>
+          <th>時間</th>
+          <th>判定</th>
+        </tr>
+      </thead>
+      <tbody id="log"></tbody>
+    </table>
 
-<button id="deleteBtn" class="soft-red" onclick="deleteSelected()" style="display:none;">
-選択した記録を削除
-</button>
+    <button
+      id="deleteBtn"
+      class="soft-red"
+      onclick="deleteSelected()"
+      style="display: none"
+    >
+      選択した記録を削除
+    </button>
 
-<button class="subtle" onclick="clearLogs()">すべて削除</button>
+    <button class="subtle" onclick="clearLogs()">すべて削除</button>
 
-<p class="note">
+    <p class="note">
       ※温度計は、検査物の中心温度を測定すること。<br />
-  
       ※本アプリは目安であり、安全を保証するものではありません。使用は自己責任でお願いします。<br />
       ※本アプリで算出される加熱温度および時間は、一般的な食品衛生の理論値に基づく目安です。<br />
       ※実際の製造にあたっては、原材料の状態や設備環境により最適な条件が異なる場合があります。<br />
       ※本アプリの利用によって生じた損害について、製作者は一切の責任を負いません。<br />
       ※必ずご自身の責任において、保健所の指導や実測値に基づいた安全確認を行ってください。<br />
-      【著作権・ライセンス】本ツールの無断転載・再配布を禁じます。<br /><br />
-       Printed from 加熱殺菌判定アプリ | Produced by 農産工房やしろ
+      【著作権・ライセンス】本ツールの無断転載・再配布を禁じます。<br />
     </p>
 
-<script>
-let latestData=null;
+    <script>
+      let latestData = null;
 
-function formatTime(min){
-  const m=Math.floor(min);
-  const s=Math.round((min-m)*60);
-  if(m===0 && s===0) return "1秒未満";
-  return `${m}分${s}秒`;
-}
+      function formatTime(min) {
+        const m = Math.floor(min);
+        const s = Math.round((min - m) * 60);
+        if (m === 0 && s === 0) return "1秒未満";
+        return `${m}分${s}秒`;
+      }
 
-function getParams(pH,Aw){
-  if(pH<4.0) return {F:10,Tref:65,Z:5,cat:"①"};
-  if(pH>=4.6 && Aw && Aw>0.94) return {F:4,Tref:120,Z:10,cat:"③"};
-  return {F:30,Tref:85,Z:8,cat:"②"};
-}
+      function getParams(pH, Aw) {
+        if (pH < 4.0) return { F: 10, Tref: 65, Z: 5, cat: "①" };
+        if (pH >= 4.6 && (Aw === null || Aw > 0.94))
+          return { F: 4, Tref: 120, Z: 10, cat: "③" };
+        return { F: 30, Tref: 85, Z: 8, cat: "②" };
+      }
 
-function getGuidance(product,req){
-  let factor=2,message="";
-  if(product.includes("ピクルス")){
-    factor=3;
-    message="固形物は中心温度の上昇が遅れるため、余裕を持った加熱時間を確保してください";
-  } else if(product.includes("ジャム")){
-    factor=1.5;
-    message="比較的均一に加熱されますが、余裕を持った加熱を推奨します";
-  } else if(product.includes("シロップ")){
-    factor=1.5;
-    message="液体は温度が均一になりやすいですが、安全のため余裕を持たせてください";
-  } else if(product.includes("たれ")){
-    factor=2;
-    message="粘度により加熱ムラが出るため、やや長めの加熱を推奨します";
-  } else {
-    factor=2;
-    message="製品特性に応じて十分な加熱時間を確保してください";
-  }
-  return {safe:req*factor,factor,message};
-}
+      function getGuidance(product, req) {
+        let factor = 2,
+          message = "";
+        if (product.includes("ピクルス")) {
+          factor = 3;
+          message =
+            "固形物は中心温度の上昇が遅れるため、余裕を持った加熱時間を確保してください";
+        } else if (product.includes("ジャム")) {
+          factor = 1.5;
+          message = "比較的均一に加熱されますが、余裕を持った加熱を推奨します";
+        } else if (product.includes("シロップ")) {
+          factor = 1.5;
+          message =
+            "液体は温度が均一になりやすいですが、安全のため余裕を持たせてください";
+        } else if (product.includes("たれ")) {
+          factor = 2;
+          message = "粘度により加熱ムラが出るため、やや長めの加熱を推奨します";
+        } else {
+          factor = 2;
+          message = "製品特性に応じて十分な加熱時間を確保してください";
+        }
+        return { safe: req * factor, factor, message };
+      }
 
-function highlightZone(pH,Aw){
-  z1.className="";z2.className="";z3.className="";
-  if(pH<4.0) z1.className="zone1";
-  else if(pH>=4.6 && Aw && Aw>0.94) z3.className="zone3";
-  else z2.className="zone2";
-}
+      function highlightZone(pH, Aw) {
+        z1.className = "";
+        z2.className = "";
+        z3.className = "";
+        if (pH < 4.0) z1.className = "zone1";
+        else if (pH >= 4.6 && (Aw === null || Aw > 0.94))
+          z3.className = "zone3";
+        else z2.className = "zone2";
+      }
 
-function calculate(){
-  const pH=parseFloat(ph.value);
-  const T=parseFloat(temp.value);
-  const actual=parseFloat(actualTime.value);
-  const Aw=aw.value?parseFloat(aw.value):null;
+      function calculate() {
+        const pH = parseFloat(ph.value);
+        const T = parseFloat(temp.value);
+        const actual = parseFloat(actualTime.value);
+        const Aw = aw.value ? parseFloat(aw.value) : null;
 
-  if(isNaN(pH)||isNaN(T)) return;
+        if (isNaN(pH) || isNaN(T)) return;
 
-  const {F,Tref,Z,cat}=getParams(pH,Aw);
-  const req=F*Math.pow(10,(Tref-T)/Z);
-  const guide=getGuidance(product.value,req);
+        const { F, Tref, Z, cat } = getParams(pH, Aw);
+        const req = F * Math.pow(10, (Tref - T) / Z);
+        const guide = getGuidance(product.value, req);
 
-  let judge="",cls="neutral";
+        let judge = "",
+          cls = "neutral";
 
-  if(!isNaN(actual)){
-    judge = actual>=guide.safe ? "OK":"NG";
-    cls = actual>=guide.safe ? "ok":"ng";
-  }
+        if (!isNaN(actual)) {
+          judge = actual >= guide.safe ? "OK" : "NG";
 
-  if(cat==="③" && judge) cls="warning";
+          if (judge === "NG") {
+            cls = "ng"; // ← 最優先
+          } else {
+            cls = cat === "③" ? "warning" : "ok";
+          }
+        }
+        if (cat === "③" && judge) cls = "warning";
 
-  result.className="result "+cls;
+        result.className = "result " + cls;
 
-  let html=`
+        let html = `
   <div style="font-size:18px;">推奨加熱時間（目安）</div>
   <div style="font-size:28px;font-weight:bold;">約 ${formatTime(req)}</div>
   <div style="font-size:14px;color:#666;">※加熱温度での必要時間目安</div>
   <hr>
   `;
 
-  if(req < 1){
-    html+=`<div style="font-size:13px;color:#cc0000;">
+        if (req < 1) {
+          html += `<div style="font-size:13px;color:#cc0000;">
     ※高温条件の理論値です。中心温度を確認し、到達時間を見極め、十分な加熱を行ってください
     </div><hr>`;
-  }
+        }
 
-  if(!judge){
-    html+=`<div style="font-size:16px;color:#666;">※実際時間を入力すると判定できます</div>`;
-  }else{
-    html+=`<div style="font-size:32px;font-weight:bold;">判定：${judge}</div>`;
+        if (!judge) {
+          html += `<div style="font-size:16px;color:#666;">※実際時間を入力すると判定できます</div>`;
+        } else {
+          html += `<div style="font-size:32px;font-weight:bold;">判定：${judge}</div>`;
 
-    if(judge==="NG"){
-      html+=`<div style="margin-top:10px;font-size:14px;color:#cc0000;">
+          if (judge === "NG") {
+            html += `<div style="margin-top:10px;font-size:14px;color:#cc0000;">
       ※基準未達です。加熱条件の見直しが必要です
       </div>`;
 
-      if(cat==="③"){
-        html+=`<div style="margin-top:5px;font-size:14px;font-weight:bold;color:#cc0000;">
+            if (cat === "③") {
+              html += `<div style="margin-top:5px;font-size:14px;font-weight:bold;color:#cc0000;">
         ボツリヌス菌の増殖リスクがある条件です。十分な加熱または条件の見直しを行ってください
         </div>`;
-      }
-    }
+            }
+          }
 
-    if(judge==="OK"){
-      html+=`<div style="margin-top:10px;font-size:20px;font-weight:bold;">
+          if (judge === "OK") {
+            html += `<div style="margin-top:10px;font-size:20px;font-weight:bold;">
       👉 現場目安：約 ${formatTime(guide.safe)}（×${guide.factor}）
       </div>
       <div style="font-size:14px;color:#555;">${guide.message}</div>`;
-    }
-  }
+          }
+        }
 
-  result.innerHTML=html;
+        result.innerHTML = html;
 
-  latestData={date:new Date().toLocaleString(),product:product.value,note:noteInput.value,pH,T,actual,judge};
+        latestData = {
+          date: new Date().toLocaleString(),
+          product: product.value,
+          note: noteInput.value,
+          pH,
+          T,
+          actual,
+          judge,
+        };
 
-  highlightZone(pH,Aw);
-}
+        highlightZone(pH, Aw);
+      }
 
-function reverseCalc(){
-  const pH=parseFloat(ph.value);
-  const target=parseFloat(targetTime.value);
-  const Aw=aw.value?parseFloat(aw.value):null;
-  if(isNaN(pH)||isNaN(target)) return;
+      function reverseCalc() {
+        const pH = parseFloat(ph.value);
+        const target = parseFloat(targetTime.value);
+        const Aw = aw.value ? parseFloat(aw.value) : null;
+        if (isNaN(pH) || isNaN(target)) return;
 
-  const {F,Tref,Z}=getParams(pH,Aw);
-  const T=Tref - Z*Math.log10(target/F);
+        const { F, Tref, Z } = getParams(pH, Aw);
+        const T = Tref - Z * Math.log10(target / F);
 
-  result.className="result ok";
-  result.innerHTML=`必要温度：約${T.toFixed(1)}℃`;
-}
+        result.className = "result ok";
+        result.innerHTML = `必要温度：約${T.toFixed(1)}℃`;
+      }
 
-function saveRecord(){
-  if(!latestData) return alert("先に計算");
-  let data=JSON.parse(localStorage.getItem("logs")||"[]");
-  data.push(latestData);
-  localStorage.setItem("logs",JSON.stringify(data));
-  render();
-}
+      function saveRecord() {
+        if (!latestData) return alert("先に計算");
+        let data = JSON.parse(localStorage.getItem("logs") || "[]");
+        data.push(latestData);
+        localStorage.setItem("logs", JSON.stringify(data));
+        render();
+      }
 
-function render(){
-  let data=JSON.parse(localStorage.getItem("logs")||"[]");
-  log.innerHTML="";
-  data.forEach((d,i)=>{
-    log.innerHTML+=`
+      function render() {
+        let data = JSON.parse(localStorage.getItem("logs") || "[]");
+        log.innerHTML = "";
+        data.forEach((d, i) => {
+          log.innerHTML += `
     <tr>
     <td><input type="checkbox" class="chk" data-index="${i}" onchange="toggleDeleteBtn()"></td>
     <td>${d.date}</td><td>${d.product}</td><td>${d.note}</td>
-    <td>${d.pH}</td><td>${d.T}</td><td>${d.actual||""}</td><td>${d.judge}</td>
+    <td>${d.pH}</td><td>${d.T}</td><td>${d.actual || ""}</td><td>${d.judge}</td>
     </tr>`;
-  });
-  toggleDeleteBtn();
-}
+        });
+        toggleDeleteBtn();
+      }
 
-function toggleDeleteBtn(){
-  const any=[...document.querySelectorAll(".chk")].some(c=>c.checked);
-  deleteBtn.style.display=any?"block":"none";
-}
+      function toggleDeleteBtn() {
+        const any = [...document.querySelectorAll(".chk")].some(
+          (c) => c.checked
+        );
+        deleteBtn.style.display = any ? "block" : "none";
+      }
 
-function deleteSelected(){
-  let data=JSON.parse(localStorage.getItem("logs")||"[]");
-  const checks=document.querySelectorAll(".chk");
-  const remain=data.filter((_,i)=>![...checks].find(c=>c.dataset.index==i&&c.checked));
-  localStorage.setItem("logs",JSON.stringify(remain));
-  render();
-}
+      function deleteSelected() {
+        let data = JSON.parse(localStorage.getItem("logs") || "[]");
+        const checks = document.querySelectorAll(".chk");
+        const remain = data.filter(
+          (_, i) => ![...checks].find((c) => c.dataset.index == i && c.checked)
+        );
+        localStorage.setItem("logs", JSON.stringify(remain));
+        render();
+      }
 
-function clearLogs(){
-  if(confirm("全削除しますか？")){
-    localStorage.removeItem("logs");
-    render();
-  }
-}
+      function clearLogs() {
+        if (confirm("全削除しますか？")) {
+          localStorage.removeItem("logs");
+          render();
+        }
+      }
 
-function downloadCSV(){
-  let data=JSON.parse(localStorage.getItem("logs")||"[]");
-  if(data.length===0) return;
-  let csv="日時,品目,備考,pH,温度,時間,判定\n";
-  data.forEach(d=>{
-    csv+=`${d.date},${d.product},${d.note},${d.pH},${d.T},${d.actual||""},${d.judge}\n`;
-  });
-  const blob=new Blob([csv]);
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="記録.csv";
-  a.click();
-}
+      function downloadCSV() {
+        let data = JSON.parse(localStorage.getItem("logs") || "[]");
+        if (data.length === 0) return;
+        let csv = "日時,品目,備考,pH,温度,時間,判定\n";
+        data.forEach((d) => {
+          csv += `${d.date},${d.product},${d.note},${d.pH},${d.T},${
+            d.actual || ""
+          },${d.judge}\n`;
+        });
+        const blob = new Blob([csv]);
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "記録.csv";
+        a.click();
+      }
 
-render();
-</script>
-
-</body>
+      render();
+    </script>
+  </body>
 </html>
